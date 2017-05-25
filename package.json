@@ -1,0 +1,32 @@
+{
+  "name": "firebase-model",
+  "version": "0.0.1",
+  "description": "An object relational mapper for Firebase.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thebrubaker/firebase-model.git"
+  },
+  "keywords": [
+    "firebase",
+    "model",
+    "orm"
+  ],
+  "author": "Joel Brubaker",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thebrubaker/firebase-model/issues"
+  },
+  "homepage": "https://github.com/thebrubaker/firebase-model#readme",
+  "dependencies": {
+    "firebase": "^4.0.0",
+    "firebase-admin": "^5.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^3.4.2",
+    "sinon": "^2.3.1"
+  }
+}
