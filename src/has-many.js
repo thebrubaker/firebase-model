@@ -1,3 +1,5 @@
+const firebase = require('./firebase')
+
 module.exports = class HasMany {
   /**
    * The constructor for the class.
@@ -25,9 +27,12 @@ module.exports = class HasMany {
    * @return {[type]}     [description]
    */
   async fetchRelation (key) {
-    return this.newChild().pipe(async child => {
-      return child.fill(await this.once(child.getLocation(), key))
-    })
+    let child = this.newChild()
+    let snapshot = await firebase.database().ref(child.getLocation()).child(key).once('value')
+    child.fill(snapshot.val())
+    child.setKey(key)
+    
+    return child
   }
 
   /**

@@ -11,18 +11,18 @@ describe('Model', function() {
   it('should have a default configuration', function() {
     let model = new Model()
     assert(model.getConfig('location') === '/')
-    assert(model.getConfig('embeds').length === 0)
+    assert(model.getConfig('populate').length === 0)
     assert(model.getConfig('fillable').length === 0)
   })
   it('should set the configuration for the model', function() {
     let model = new Model()
     model.setConfig({
       location: 'foo',
-      embeds: ['foo'],
+      populate: ['foo'],
       fillable: ['foo']
     })
     assert(model.getConfig('location') === 'foo')
-    assert(model.getConfig('embeds')[0] === 'foo')
+    assert(model.getConfig('populate')[0] === 'foo')
     assert(model.getConfig('fillable')[0] === 'foo')
   })
   it('should have a trap for accessing properties from the model', function() {
@@ -127,5 +127,12 @@ describe('Model', function() {
     assert(callback.args[0][0] === model)
     let value = model.pipe(123)
     assert(123)
+  })
+  it('should return a has many relationship on the model', function() {
+    let model = new Model()
+    let relationship = model.hasMany(Model)
+    assert(relationship.constructor.name === 'HasMany')
+    assert(relationship.parent === model)
+    assert(relationship.Child === Model)
   })
 })

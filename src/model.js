@@ -27,8 +27,13 @@ module.exports = class Model {
    * Set the configuration for the model.
    * @param {Model} model
    */
-  setConfig ({ location = '/', embeds = [], fillable = [] }) {
-    this[_config] = { location, embeds, fillable }
+  setConfig (model) {
+    this[_config] = Object.getOwnPropertyNames(Object.getPrototypeOf(this))
+      .filter(key => key !== 'constructor')
+      .reduce((carry, key) => {
+        carry[key] = this[key]
+        return carry
+      }, {})
   }
 
   /**
@@ -63,7 +68,14 @@ module.exports = class Model {
    * @return {string}
    */
   data () {
-    return Object.assign(this[_attributes], { key: this.getKey() })
+    let data = Object.assign(this[_attributes], { key: this.getKey() })
+    Object.keys(data).forEach(key => {
+      if (typeof data[key] === 'object' && this[_config][key] !== undefined) {
+        data[key] = Object.keys(data[key]).map(item => data[key][item].data())
+      }
+    })
+
+    return data
   }
 
   /**
@@ -72,6 +84,31 @@ module.exports = class Model {
    */
   json () {
     return JSON.stringify(this.data())
+  }
+
+  /**
+   * Return a model by it's key.
+   * @param  {string} key
+   * @return {Promise}
+   */
+  async fetch (key) {
+    let snapshot = await this.reference().child(key).once('value')
+    let model = this.newInstance(snapshot.val(), key)
+    await Promise.all(model.loadRelations())
+
+    return model
+  }
+
+  /**
+   * Return a new instance of the model.
+   * @return {Model}
+   */
+  newInstance (attributes = {}, key) {
+    let model = Object.create(this)
+    model.setAttributes(attributes)
+    model.setKey(this.key || key)
+
+    return model
   }
 
   /**
@@ -210,38 +247,72 @@ module.exports = class Model {
   }
 
   /**
-   * Load all relations on the model.
-   * @return {[type]} [description]
+   * Load all relations on the model. For each relation on
+   * the model, we crawl the relation and fetch the items from it.
+   * This returns an array of arrays, which we then flatten with concat.
+   *   [ [ promise1, promise2 ], [ promise3, promise4 ] ] =>
+   *   [ promise1, promise2, promise3, promise4 ]
+   * @return {Array}  An array of promises fetching relations on the model.
    */
-  async loadRelations () {
-    this.getRelations(relation => {
-      Object.keys(this[relation]).forEach(async key => {
-        this[relation][key] = await this[_config][relation]().fetchRelation(key)
+  loadRelations () {
+    return this.iterateAllRelations((relation, key) => {
+      return this.loadRelation(relation, key)
+    }).reduce((a, b) => a.concat(b), [])
+  }
+
+  /**
+   * Execute a callback on all items in all relations on this
+   * model. The callback will receive the relation name and the
+   * key of the relation.
+   * @param  {Function} callback
+   */
+  iterateAllRelations (callback) {
+    // console.log('iterateAllRelations called', callback)
+    return this.getRelations(relation => {
+      // console.log(relation, this[relation])
+      return Object.keys(this[relation]).map(key => {
+        // callback('charts', 'chart1')
+        return callback(relation, key)
       })
     })
   }
 
   /**
-   * For each relation that should be embedded in the model,
-   * execute the callback on the name of the embedded relation.
+   * Return the model's relations or execute a callback on each relation
+   * in the model.
    * @param  {Function} callback  The callback with the relation as an argument.
    */
   getRelations (callback) {
-    Object.keys(this.getAttributes()).forEach(key => {
-      if (this.shouldEmbed(key)) {
-        callback(key)
-      }
+    // console.log('getRelations called', callback)
+    let filtered = Object.keys(this.getAttributes())
+      .filter(key => this.shouldPopulate(key))
+      // console.log(filtered)
+      return filtered.map(key => callback ? callback(key) : key)
+  }
+
+  /**
+   * Load a relation on the model.
+   * @param  {string} relation  The name of the relation to load.
+   * @param  {string} key  The key of the relation to load.
+   * @return {Promise}          [description]
+   */
+  loadRelation (relation, key) {
+    let promise = this[_config][relation].apply(this).fetchRelation(key)
+    promise.then(model => {
+      this[relation][key] = model
     })
+
+    return promise
   }
 
   /**
    * Determine if the given key is defined on the model's
-   * embeds array.
+   * populate array.
    * @param  {string} key
    * @return {boolean}
    */
-  shouldEmbed (key) {
-    return this.getEmbeds(key) !== undefined
+  shouldPopulate (key) {
+    return this.getConfig('populate').includes(key)
   }
 
   /**
@@ -252,14 +323,5 @@ module.exports = class Model {
    */
   getConfig (key = null) {
     return key ? this[_config][key] : this[_config]
-  }
-
-  /**
-   * Return a list of the model's embeds or a specific key on the embeds list.
-   * @param  {string|null} key
-   * @return {mixed}
-   */
-  getEmbeds (key = null) {
-    return key ? this.getConfig('embeds')[key] : this.getConfig('embeds')
   }
 }
