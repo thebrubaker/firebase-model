@@ -2,29 +2,37 @@ const assert = require('assert')
 const sinon = require('sinon')
 const Model = require('../src/model')
 const { _key, _attributes } = require('../src/symbols')
+const serviceAccount = require('../service-account.json')
+
+Model.init(admin => {
+  return {
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://spice-2cfa2.firebaseio.com"
+  }
+})
 
 describe('Model', function() {
   it('should take attributes as an argument for constructor', function() {
     let model = new Model({foo: 'bar'})
     assert(model.getAttributes().foo === 'bar')
   })
-  it('should have a default configuration', function() {
-    let model = new Model()
-    assert(model.getConfig('location') === '/')
-    assert(model.getConfig('populate').length === 0)
-    assert(model.getConfig('fillable').length === 0)
-  })
-  it('should set the configuration for the model', function() {
-    let model = new Model()
-    model.setConfig({
-      location: 'foo',
-      populate: ['foo'],
-      fillable: ['foo']
-    })
-    assert(model.getConfig('location') === 'foo')
-    assert(model.getConfig('populate')[0] === 'foo')
-    assert(model.getConfig('fillable')[0] === 'foo')
-  })
+  // it('should have a default configuration', function() {
+  //   let model = new Model()
+  //   assert(model.getConfig('location') === '/')
+  //   assert(model.getConfig('populate').length === 0)
+  //   assert(model.getConfig('fillable').length === 0)
+  // })
+  // it('should set the configuration for the model', function() {
+  //   let model = new Model()
+  //   model.setConfig({
+  //     location: 'foo',
+  //     populate: ['foo'],
+  //     fillable: ['foo']
+  //   })
+  //   assert(model.getConfig('location') === 'foo')
+  //   assert(model.getConfig('populate')[0] === 'foo')
+  //   assert(model.getConfig('fillable')[0] === 'foo')
+  // })
   it('should have a trap for accessing properties from the model', function() {
     let model = new Model({foo: 'bar'})
     assert(model.foo === model.getAttributes().foo)

@@ -1,4 +1,4 @@
-const firebase = require('./firebase')
+let firebase = require('./firebase')
 
 module.exports = class HasMany {
   /**

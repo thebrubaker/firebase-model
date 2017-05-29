@@ -1,6 +1,7 @@
-const { _key, _attributes, _location, _config } = require('./symbols')
-const firebase = require('./firebase')
-const HasMany = require('./has-many')
+let { _key, _attributes, _location, _config } = require('./symbols')
+let admin = require('firebase-admin')
+let HasMany = require('./has-many')
+let firebase = require('./firebase')
 
 /**
  * 
@@ -21,6 +22,16 @@ module.exports = class Model {
     this.setAttributes(attributes)
 
     return new Proxy(this, this)
+  }
+
+  /**
+   * Initialize the firebase instance for the Model. Pass a callback the
+   * receives firebase admin and returns a credentials object.
+   * @param  {Function} callback The callback is passed firebase admin
+   *                             and expects a return of credentials.
+   */
+  static init (callback) {
+    firebase = admin.initializeApp(callback(admin))
   }
 
   /**
