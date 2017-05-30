@@ -144,8 +144,8 @@ module.exports = class Model {
    * @return {Promise}
    */
   async push (callback) {
-    callback(await this.reference((ref, { attributes }) => {
-      return ref.push(attributes)
+    callback(this.reference(ref => {
+      return ref.push(this.getAttributes())
     }))
 
     return this
