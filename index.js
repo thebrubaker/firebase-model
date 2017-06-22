@@ -1,3 +1,3 @@
-const Model = require('./src/model')
+const Model = require('./src/model-v2')
 
 module.exports = Model
