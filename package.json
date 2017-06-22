@@ -22,11 +22,12 @@
   },
   "homepage": "https://github.com/thebrubaker/firebase-model#readme",
   "dependencies": {
-    "firebase": "^4.0.0",
-    "firebase-admin": "^5.0.0"
+
   },
   "devDependencies": {
     "mocha": "^3.4.2",
-    "sinon": "^2.3.1"
+    "sinon": "^2.3.1",
+    "firebase": "^4.0.0",
+    "firebase-admin": "^5.0.0"
   }
 }
