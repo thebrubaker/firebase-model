@@ -74,7 +74,7 @@ module.exports = class Model {
   create (payload) {
     let model = this.isLoaded() ? this.newInstance(payload) : this.setAttributes(payload)
 
-    return this.database().ref(this.getLocation()).push(model.attributes).then(({ key }) => {
+    return this.database().ref(model.getLocation()).push(model.getAttributes()).then(({ key }) => {
       model.setKey(key)
 
       return model
